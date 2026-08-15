@@ -11,7 +11,7 @@
 
 > ⚠️ Важно: Замените `<ВНЕШНИЙ_IP>` в командах ниже на реальный белый IP-адрес вашей виртуальной машины (например, `123.45.67.89`).
 
-## ЭТАП 1: Подготовка ВМ (Выполняем на виртуальной машине)
+## ЭТАП 1: Подготовка ВМ (Master и Workers)
 
 ### 1. Отключаем Swap
 
@@ -44,7 +44,7 @@ EOF
 sudo sysctl --system
 ```
 
-## ЭТАП 2: Установка движка и компонентов (На ВМ)
+## ЭТАП 2: Установка движка и компонентов (Master и Workers)
 
 ### 3. Устанавливаем containerd
 
@@ -61,7 +61,7 @@ sudo systemctl restart containerd
 sudo systemctl enable containerd
 ```
 
-### 4. Устанавливаем kubelet, kubeadm, kubectl
+### 4. Устанавливаем kubelet, kubeadm, kubectl (Master и Workers)
 
 Добавляем официальный репозиторий Kubernetes (используем стабильную ветку 1.30).
 
@@ -78,9 +78,9 @@ sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl # Запрещаем автообновление, чтобы кластер не сломался сам по себе
 ```
 
-## ЭТАП 3: Инициализация кластера (На ВМ)
+## ЭТАП 3: Инициализация кластера (Master)
 
-### 5. Запускаем "прораба" (kubeadm)
+### 5. Запускаем kubeadm
 
 Здесь мы решаем задачу ДЗ по сертификатам. Флаг `--apiserver-cert-extra-sans` добавляет ваш внешний IP в список доверенных адресов сертификата API-сервера.
 
@@ -111,17 +111,61 @@ kubectl get nodes
 
 *Должно быть: `STATUS: Ready`.*
 
+## ЭТАП 4: Присоединение и настройка Worker-нод (Workers)
+
+### 7. Присоединение Worker-нод
+
+На каждой worker-ноде выполните команду kubeadm join, которую вы скопировали на Шаге 5. Пример:
+
+```bash
+sudo kubeadm join <IP_МАСТЕРА>:6443 --token <ваш_токен> --discovery-token-ca-cert-hash sha256:<ваш_хэш>
+```
+
+### 8. Критическое исправление DNS на Worker-нодах
+
+*Проблема:* По умолчанию в Debian/Ubuntu containerd пытается использовать локальный DNS 127.0.0.53, который недоступен внутри контейнеров, что приводит к ошибке ImagePullBackOff и таймаутам.
+
+Выполните это на `Workers`:
+
+```bash
+# 1. Удаляем симлинк на systemd-resolved
+sudo rm -f /etc/resolv.conf
+
+# 2. Создаем файл с публичными DNS
+cat <<EOF | sudo tee /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 1.1.1.1
+EOF
+
+# 3. Защищаем файл от перезаписи сетевыми менеджерами
+sudo chattr +i /etc/resolv.conf
+
+# 4. Перезапускаем containerd
+sudo systemctl restart containerd
+```
+
+## ЭТАП 5: Проверка кластера (Master)
+
+### 9. Проверяем кластер
+
+```bash
+kubectl get nodes -o wide
+```
+
+**Ожидаемый результат:** Все 3 ноды должны быть в статусе `Ready`.
+
 ---
 
-## ЭТАП 4: Установка Dashboard (На ВМ)
+## ЭТАП 6: Установка Dashboard (Master)
 
-### 7. Разворачиваем Dashboard
+### 10. Разворачиваем Dashboard
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 ```
 
-### 8. Создаем учетную запись администратора для входа
+### 11. Создаем учетную запись администратора для входа
 
 Создайте файл `dashboard-admin.yaml` (например, через `vim dashboard-admin.yaml`) и вставьте туда:
 
@@ -152,7 +196,7 @@ subjects:
 kubectl apply -f dashboard-admin.yaml
 ```
 
-### 9. Получаем токен для входа
+### 12. Получаем токен для входа
 
 Эта команда сгенерирует длинную строку. Скопируйте её целиком — это ваш пароль для Dashboard.
 
@@ -160,11 +204,11 @@ kubectl apply -f dashboard-admin.yaml
 kubectl -n kubernetes-dashboard create token admin-user
 ```
 
-## ЭТАП 5: Настройка локального компьютера (Ваша рабочая машина)
+## ЭТАП 7: Настройка локального компьютера (Ваша рабочая машина)
 
 Теперь мы свяжем ваш локальный `kubectl` с удаленным кластером, как требует задание.
 
-### 10. Устанавливаем kubectl локально
+### 13. Устанавливаем kubectl локально
 
 Если у вас Windows, скачайте `.exe` с официального сайта, если macOS — `brew install kubectl`.
 
@@ -193,9 +237,9 @@ kubectl version --client
 
 > (Примечание: версия v1.36 в ссылке актуальна на середину 2026 года, вы можете проверить последнюю стабильную ветку на [kubernetes.io](https://kubernetes.io/releases/)).
 
-### 11. Копируем конфигурацию
+### 14. Копируем конфигурацию
 
-Вернитесь на ВМ и выведите конфиг:
+Вернитесь на `Master` и выведите конфиг:
 
 ```bash
 cat ~/.kube/config
@@ -205,7 +249,7 @@ cat ~/.kube/config
 
 На локальной машине создайте или откройте файл `~/.kube/config` (на Windows это `C:\Users\ВашеИмя\.kube\config`) и вставьте туда скопированный текст.
 
-### 12. Проверяем подключение
+### 15. Проверяем подключение
 
 На локальной машине выполните:
 
@@ -213,9 +257,9 @@ cat ~/.kube/config
 kubectl get nodes
 ```
 
-*Если вы видите вашу ноду в статусе `Ready` — поздравляю, вы успешно подключились!*
+*Если вы видите вашу ноды в статусе `Ready` — поздравляю, вы успешно подключились!*
 
-### 13. Делаем проброс порта для ДЗ
+### 16. Делаем проброс порта для ДЗ
 
 На локальной машине выполните:
 
@@ -223,7 +267,7 @@ kubectl get nodes
 kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard 10443:443 --address 0.0.0.0
 ```
 
-### 14. Финал
+### 17. Финал
 
 Откройте браузер на локальной машине и перейдите по адресу:
 
