@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-init-deployment
+  labels:
+    app: nginx-init
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-init
+  template:
+    metadata:
+      labels:
+        app: nginx-init
+    spec:
+      initContainers:
+      - name: init-check-service
+        image: busybox:1.28
+        command: ['sh', '-c', "until nslookup demo-init-service.default.svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
