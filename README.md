@@ -2,15 +2,15 @@
 
 ## [«Kubernetes. Причины появления. Команда kubectl»](01-intro-kubectl/)
 
-## [«Базовые объекты K8S (Pods, ReplicaSets)»](02-pods-replicasets/)
+## [«Базовые объекты K8S»](02-basic-objects/)
 
-## [«Контроллер Deployments»](03-deployments/)
+## [«Запуск приложений в K8S»](03-deployments/)
 
-## [«Сетевое взаимодействие (Services, Ingress)»](04-services-ingress/)
+## [«Сетевое взаимодействие»](04-networking/)
 
 ## [«Хранение в K8s»](05-storage/)
 
-## [«Настройка приложений (Configs, Secrets)»](06-configs-secrets/)
+## [«Настройка приложений»](06-configs-secrets/)
 
 ## [«Helm»](07-helm/)
 
@@ -18,7 +18,7 @@
 
 ## [«Установка Kubernetes с помощью kubeadm, kubespray»](09-installation/)
 
-## [«Как работает сеть в K8S (CNI)»](10-cni-networking/)
+## [«Как работает сеть в K8S»](10-cni-networking/)
 
 ## [«Обновление приложений»](11-updates/)
 
