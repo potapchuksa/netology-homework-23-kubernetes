@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange
+  labels:
+    app: data-exchange
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-exchange
+  template:
+    metadata:
+      labels:
+        app: data-exchange
+    spec:
+      containers:
+      - name: writer-busybox
+        image: busybox:1.36
+        command: ["/bin/sh", "-c"]
+        args: ["while true; do echo $(date) >> /shared/data.txt; sleep 5; done"]
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /shared
+      - name: reader-multitool
+        image: wbitt/network-multitool:latest
+        command: ["/bin/sh", "-c"]
+        # Читаем файл в реальном времени
+        args: ["tail -f /shared/data.txt"]
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /shared
+      volumes:
+      - name: shared-volume
+        emptyDir: {} # Эфемерное хранилище, живет только пока жив под
