@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader-role
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+# Примечание: "describe" в Kubernetes API не является отдельным глаголом (verb). 
+# Команда kubectl describe использует глаголы "get" и "list" под капотом.

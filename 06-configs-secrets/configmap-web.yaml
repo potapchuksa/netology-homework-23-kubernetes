@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-content-config
+data:
+  # Имя ключа станет именем файла внутри пода
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Netology Kubernetes DZ</title>
+    </head>
+    <body>
+      <h1>Привет от Kubernetes ConfigMap!</h1>
+      <p>Эта страница загружена из ConfigMap, а не из образа Docker.</p>
+    </body>
+    </html>
