@@ -4,3 +4,5 @@ tls.*
 *.crt
 *.csr
 *.srl
+
+get_helm.sh

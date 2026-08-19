@@ -1,0 +1,14 @@
+Спасибо за установку {{ .Chart.Name }}!
+
+Ваш релиз называется: {{ .Release.Name }}
+Он развернут в неймспейсе: {{ .Release.Namespace }}
+
+Чтобы проверить, что поды успешно запустились, выполните:
+  kubectl get pods -n {{ .Release.Namespace }} -l app={{ .Release.Name }}-frontend
+  kubectl get pods -n {{ .Release.Namespace }} -l app={{ .Release.Name }}-backend
+
+Чтобы посмотреть, какие образы используются в подах, выполните:
+  kubectl get pod -n {{ .Release.Namespace }} -l app={{ .Release.Name }}-frontend -o jsonpath='{.items[0].spec.containers[0].image}{"\n"}'
+
+Чтобы удалить этот релиз, выполните:
+  helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}

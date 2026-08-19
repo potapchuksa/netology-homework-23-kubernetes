@@ -1,0 +1,15 @@
+# netology-web-app/values.yaml
+frontend:
+  name: frontend
+  image: nginx
+  tag: "1.21" # Версия по умолчанию (будет переопределена при install)
+  port: 80
+
+backend:
+  name: backend
+  image: wbitt/network-multitool
+  tag: "latest"
+  port: 8080
+
+service:
+  type: ClusterIP

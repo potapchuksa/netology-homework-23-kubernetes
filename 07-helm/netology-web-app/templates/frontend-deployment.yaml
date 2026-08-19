@@ -1,0 +1,22 @@
+# netology-web-app/templates/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-frontend
+  labels:
+    app: {{ .Release.Name }}-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}"
+        ports:
+        - containerPort: {{ .Values.frontend.port }}
