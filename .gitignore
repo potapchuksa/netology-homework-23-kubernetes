@@ -6,3 +6,5 @@ tls.*
 *.srl
 
 get_helm.sh
+
+*.qcow2
